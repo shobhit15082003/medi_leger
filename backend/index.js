@@ -1,13 +1,10 @@
-import express from "express";
-import dbConnect from "./config/mediledger.js"
-const app = express();
+import { app } from "./app.js";
+import dbConnect from "./config/dbConnect.js";
 
-const PORT=process.env.PORT || 4000;
+const port = process.env.PORT || 4000;
 
-
-
-app.listen(PORT, () => {
-    console.log('Server started');
+app.listen(port, () => {
+    console.log(`Server Running on port: ${port}`);
 })
 
 dbConnect();
