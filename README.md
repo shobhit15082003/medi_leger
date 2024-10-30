@@ -1,6 +1,6 @@
 # MediLeger
 
-
+- [Database Model Link](https://app.eraser.io/workspace/riQPHaI0GwlNXNuDRD8b?origin=share)
 
 ## Table of Contents
 - [Folder Structure](#folder-structure)
