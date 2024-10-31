@@ -3,8 +3,12 @@ import dbConnect from "./config/dbConnect.js";
 
 const port = process.env.PORT || 4000;
 
-app.listen(port, () => {
-    console.log(`Server Running on port: ${port}`);
+dbConnect()
+.then(() => {
+    app.listen(port, () => {
+        console.log(`Server Running on port: ${port}`);
+    })
 })
-
-dbConnect();
+.catch((error) => {
+    console.log(`Server connection failed`);
+})
