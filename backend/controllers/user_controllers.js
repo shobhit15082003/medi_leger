@@ -19,7 +19,9 @@ export const signup = asyncHandler(async (req, res) => {
     if (!email||!password||!confirmPassword||!first_name||!last_name||!gender||!contact_info) {
         throw new ApiError(400, "All fields are required");
     }
-    
+    // if(contact_info.length!==10)
+    //     throw new ApiError(400,"Lenght of phone number should be 10");
+
     if(role==="Patient")
     {
         const{
@@ -36,6 +38,8 @@ export const signup = asyncHandler(async (req, res) => {
         if(!aadhar_number){
             throw new ApiError(400,"Address is required");
         }
+        if(aadhar_number.length!==12)
+            throw new ApiError(400,"Enter a 12 digit valid aadhar number");
 
     }
     else if(role==="Doctor"){
@@ -147,6 +151,7 @@ export const login = asyncHandler(async (req, res) => {
     else if(user.role==="Patient")
         user=await User.findOne({email:email}).populate("Doctor");
     
+    //checking ig password is correct
     if(bcrypt.compare(password,user.password)){
         const payload = {
             email:user.email,
@@ -175,7 +180,7 @@ export const login = asyncHandler(async (req, res) => {
 
     }
     else{
-        throw new ApiError(400,"Password is incorrect");
+        throw new ApiError(400,"Password is incorrect"); //wrong password
     }
 
 });
