@@ -45,8 +45,12 @@ medi_ledger/
 2. Create a `.env` file and configure your environment variables :
 
   ```bash
-  PORT = 
-  DATABASE_URL = ""
+  PORT=
+  DATABASE_URL=""
+
+  CLOUDINARY_CLOUD_NAME=
+  CLOUDINARY_API_KEY=
+  CLOUDINARY_API_SECRET=
   ```
 
 3. Run the backend server:
