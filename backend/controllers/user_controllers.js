@@ -1,34 +1,40 @@
-import { asyncHandler } from '../utilities/asyncHandler'
-import { ApiError } from "../utilities/ApiError.js"; 
-import { ApiResponse } from "../utilities/ApiResponse.js"; 
-import User from '../models/User.js';
-import Patient from '../models/Patient.js';
-import Doctor from '../models/Doctor.js';
+import { asyncHandler } from '../utilities/asyncHandler.js'
+import { ApiError } from "../utilities/ApiError.js"
+import { ApiResponse } from "../utilities/ApiResponse.js"
+import { uploadOnCloudinary } from '../utilities/cloudinary.js'
+import bcrypt from "bcrypt"
+import User from '../models/User.js'
+import Patient from '../models/Patient.js'
+import Doctor from '../models/Doctor.js'
 
 export const signup = asyncHandler(async (req, res) => {
-    const {role,
+    const {
+        username,
         email,
         password,
-        confirmPassword,  
+        confirmPassword,
+        role,  
         first_name,
         last_name, 
         gender,
         contact_info,
-        
-    }=req.body;
-    if (!email||!password||!confirmPassword||!first_name||!last_name||!gender||!contact_info) {
+        // optional (role based)
+        date_of_birth,
+        address,
+        aadhar_number,
+        specialization,
+        license_number,
+        work_address
+    } = req.body;
+    
+    if (!username||!email||!password||!confirmPassword||!role||!first_name||!last_name||!gender||!contact_info) {
         throw new ApiError(400, "All fields are required");
     }
+    
     // if(contact_info.length!==10)
     //     throw new ApiError(400,"Lenght of phone number should be 10");
 
-    if(role==="Patient")
-    {
-        const{
-            date_of_birth,
-            address,
-            aadhar_number,
-        }=req.body;
+    if(role==="Patient") {
         if (!date_of_birth) {
             throw new ApiError(400, "Date of birth is required");
         }
@@ -38,16 +44,11 @@ export const signup = asyncHandler(async (req, res) => {
         if(!aadhar_number){
             throw new ApiError(400,"Address is required");
         }
-        if(aadhar_number.length!==12)
+        if(aadhar_number.length!==12) {
             throw new ApiError(400,"Enter a 12 digit valid aadhar number");
-
+        }
     }
     else if(role==="Doctor"){
-        const{
-            specialization,
-            license_number,
-            work_address,
-        }=req.body;
         if (!specialization) {
             throw new ApiError(400, "Specialization is required");
         }
@@ -65,35 +66,50 @@ export const signup = asyncHandler(async (req, res) => {
     }
 
     //if email already exits
-    const exisitingUser=await User.findOne({email:email});
+    const exisitingUser = await User.findOne({email:email});
     if(exisitingUser){
         throw new ApiError(400,"Email is already registered");
     }
 
-    const hashedPassword=await bcrypt.hash(password,10);
+    //coudinary image upload
+    let imageUrl;
+    if(req.file) {
+        console.log(req.file);
+        const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+        imageUrl = cloudinaryResponse.data.url
+    } else {
+        //default
+        imageUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${first_name}`;
+    }
+    if(!imageUrl) {
+        throw new ApiError(400,"Image Upload on cloudinary error");
+    }
 
-    const newUser=await User.create({
-        username:username,
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+        username: username,
         email:email,
         password:hashedPassword,
         role:role,
     });
 
-    if(role==="Patient"){
-        const newPatient=await Patient.create({
+    let newPatient = null, newDoctor = null;
+    if(role==="Patient") {
+        newPatient = await Patient.create({
             first_name:first_name,
             last_name:last_name,
             date_of_birth:date_of_birth,
             gender:gender,
             contact_info:contact_info,
             address:address,
-            image:`https://api.dicebear.com/7.x/initials/svg?seed=${firstName}`,
+            image:imageUrl,
             aadhar_number:aadhar_number,
             user_id:newUser._id,
         });
     }
-    else if(role==="Doctor"){
-        const newDoctor=await Doctor.create({
+    else if(role==="Doctor") {
+        newDoctor = await Doctor.create({
             first_name:first_name,
             last_name:last_name,
             specialization:specialization,
@@ -101,7 +117,7 @@ export const signup = asyncHandler(async (req, res) => {
             gender:gender,
             license_number:license_number,
             work_address:work_address,
-            image:`https://api.dicebear.com/7.x/initials/svg?seed=${firstName}`,
+            image:imageUrl,
             user_id:newUser._id,
         });
     }
@@ -115,20 +131,13 @@ export const signup = asyncHandler(async (req, res) => {
         {
             new: true, // returns the updated document
             runValidators: true, // runs schema validators
-        });
-
+        }
+    );
 
     return res.status(200).json(
-        new ApiResponse(200,updatedUser, "User registered Successfully")
+        new ApiResponse(200, updatedUser, "User registered Successfully")
     )
-
-    //Doubts:
-    // 1)How to send the catch error
-    // 2)How to take image as input
     // 3)Dealing with otp is still left and needs to done and updated over here
-    // 4)When asking for email then username is not required
-    
-
 });
 
 
@@ -175,12 +184,10 @@ export const login = asyncHandler(async (req, res) => {
             user,
             token,
            message:"Logged in successfully",
-
         });
-
     }
     else{
-        throw new ApiError(400,"Password is incorrect"); //wrong password
+        throw new ApiError(400, "Password is incorrect"); //wrong password
     }
 
 });
