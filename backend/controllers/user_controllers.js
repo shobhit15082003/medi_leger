@@ -7,7 +7,6 @@ import Doctor from '../models/Doctor.js';
 
 export const signup = asyncHandler(async (req, res) => {
     const {role,
-        username,
         email,
         password,
         confirmPassword,  
@@ -17,10 +16,12 @@ export const signup = asyncHandler(async (req, res) => {
         contact_info,
         
     }=req.body;
-    if (!username||!email||!password||!confirmPassword||!first_name||!last_name||!gender||!contact_info) {
+    if (!email||!password||!confirmPassword||!first_name||!last_name||!gender||!contact_info) {
         throw new ApiError(400, "All fields are required");
     }
-    
+    // if(contact_info.length!==10)
+    //     throw new ApiError(400,"Lenght of phone number should be 10");
+
     if(role==="Patient")
     {
         const{
@@ -37,16 +38,18 @@ export const signup = asyncHandler(async (req, res) => {
         if(!aadhar_number){
             throw new ApiError(400,"Address is required");
         }
+        if(aadhar_number.length!==12)
+            throw new ApiError(400,"Enter a 12 digit valid aadhar number");
 
     }
     else if(role==="Doctor"){
         const{
-            speciality,
+            specialization,
             license_number,
             work_address,
         }=req.body;
-        if (!speciality) {
-            throw new ApiError(400, "Speciality is required");
+        if (!specialization) {
+            throw new ApiError(400, "Specialization is required");
         }
         if(!license_number){
             throw new ApiError(400,"License Number is required");
@@ -93,7 +96,7 @@ export const signup = asyncHandler(async (req, res) => {
         const newDoctor=await Doctor.create({
             first_name:first_name,
             last_name:last_name,
-            speciality:speciality,
+            specialization:specialization,
             contact_info:contact_info,
             gender:gender,
             license_number:license_number,
@@ -125,5 +128,59 @@ export const signup = asyncHandler(async (req, res) => {
     // 3)Dealing with otp is still left and needs to done and updated over here
     // 4)When asking for email then username is not required
     
+
+});
+
+
+export const login = asyncHandler(async (req, res) => {
+    //getting the credentials
+    const {email,password}=req.body;
+
+    if(!email||!password){
+        throw new ApiError(400,"All fields are required");
+    }
+
+    const user =await User.findOne({email:email});
+
+    if(!user){
+        throw new ApiError(400,"User is not registered");
+    }
+    
+    if(user.role==="Doctor")
+        user=await User.findOne({email:email}).populate("Doctor");
+    else if(user.role==="Patient")
+        user=await User.findOne({email:email}).populate("Doctor");
+    
+    //checking ig password is correct
+    if(bcrypt.compare(password,user.password)){
+        const payload = {
+            email:user.email,
+            id:user._id,
+            role:user.role,
+            patient_id:patient_id,
+            doctor_id:doctor_id,
+        }
+        const token = jwt.sign(payload,process.env.JWT_SECRET,{
+            expiresIn:"10h",
+        });
+        user.password=undefined;
+        user.token=token; //passing the token in the user's body
+
+        const options ={
+            expires: new Date(Date.now()+3*24*60*60*1000),//3 days
+            httpOnly:true
+        }
+        res.cookie("token",token,options).status(200).json({
+            success:true,
+            user,
+            token,
+           message:"Logged in successfully",
+
+        });
+
+    }
+    else{
+        throw new ApiError(400,"Password is incorrect"); //wrong password
+    }
 
 });
