@@ -12,4 +12,8 @@ app.use(cookieParser());
 
 // multerTest(app);
 
+import userRouter from "./routes/user_routes.js";
+
+app.use("/api/v1/user", userRouter);
+
 export { app }
