@@ -178,7 +178,7 @@ export const signup = asyncHandler(async (req, res) => {
     // 3)Dealing with otp is still left and needs to done and updated over here
 });
 
-//lofin
+//login
 export const login = asyncHandler(async (req, res) => {
     //getting the credentials
     const {email,password}=req.body;
@@ -198,7 +198,7 @@ export const login = asyncHandler(async (req, res) => {
     else if(user.role==="Patient")
         user=await User.findOne({email:email}).populate("Doctor");
     
-    //checking ig password is correct
+    //checking if password is correct
     if(bcrypt.compare(password,user.password)){
         const payload = {
             email:user.email,
