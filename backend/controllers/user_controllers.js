@@ -270,6 +270,7 @@ export const sendOTP = asyncHandler(async (req, res) => {
 });
 
 //change password
+//VVVIP it need auth middleware to be called before calling it
 export const changePassword = asyncHandler(async (req, res) => {
     
     const userDetails=await User.findById(req.user._id);  //little doubt whther it is _id or id
