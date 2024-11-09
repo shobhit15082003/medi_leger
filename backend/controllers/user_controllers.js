@@ -1,12 +1,26 @@
+// Utilities
 import { asyncHandler } from '../utilities/asyncHandler.js'
 import { ApiError } from "../utilities/ApiError.js"
 import { ApiResponse } from "../utilities/ApiResponse.js"
 import { uploadOnCloudinary } from '../utilities/cloudinary.js'
+
+// librarires
 import bcrypt from "bcrypt"
+import otpGenerator from 'otp-generator'
+
+
+// models
 import User from '../models/User.js'
 import Patient from '../models/Patient.js'
 import Doctor from '../models/Doctor.js'
+import OTP from '../models/Otp_model.js'
 
+
+
+
+
+
+//signup
 export const signup = asyncHandler(async (req, res) => {
     const {
         username,
@@ -24,7 +38,8 @@ export const signup = asyncHandler(async (req, res) => {
         aadhar_number,
         specialization,
         license_number,
-        work_address
+        work_address,
+        otp,
     } = req.body;
     
     if (!username||!email||!password||!confirmPassword||!role||!first_name||!last_name||!gender||!contact_info) {
@@ -85,6 +100,23 @@ export const signup = asyncHandler(async (req, res) => {
         throw new ApiError(400,"Image Upload on cloudinary error");
     }
 
+
+     //find most recent otp
+     const recentOtp=await OTP.find({email}).sort({createdAt:-1}).limit(1); 
+     console.log(recentOtp[0].otp);
+    //  console.log(otp);
+ 
+     //validate otp
+     if(recentOtp.length==0){
+       //OTP NOT FOUND
+       throw new ApiError(400,"OTP not found");
+     }
+ 
+     else if(otp!==recentOtp[0].otp){
+        throw new ApiError(400,"Wrong OTP");
+     }
+     
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
@@ -134,13 +166,15 @@ export const signup = asyncHandler(async (req, res) => {
         }
     );
 
+
+
     return res.status(200).json(
         new ApiResponse(200, updatedUser, "User registered Successfully")
     )
     // 3)Dealing with otp is still left and needs to done and updated over here
 });
 
-
+//lofin
 export const login = asyncHandler(async (req, res) => {
     //getting the credentials
     const {email,password}=req.body;
@@ -189,5 +223,41 @@ export const login = asyncHandler(async (req, res) => {
     else{
         throw new ApiError(400, "Password is incorrect"); //wrong password
     }
+
+});
+
+//otp
+export const sendOTP = asyncHandler(async (req, res) => {
+
+    const {email}=req.body;
+
+    if(!email)
+        throw new ApiError(400,"Email is missing");
+
+    const registeredUser= await User.findOne({email:email});
+    
+    if(registeredUser){
+        throw new ApiError(400,"User is already registered");
+    }
+
+    
+    var otp = otpGenerator.generate(6, { 
+        digits: true, 
+        upperCaseAlphabets: true, 
+        lowerCaseAlphabets: false, 
+        specialChars: false 
+    });
+    
+
+    
+    const otpBody=await OTP.create({email,otp});
+    console.log('Entry created in DB model');
+    // console.log(otpBody);
+
+
+    return res.status(200).json(
+        new ApiResponse(200, updatedUser, "OTP Sent Successfully")
+    )
+
 
 });
