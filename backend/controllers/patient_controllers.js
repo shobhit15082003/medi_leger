@@ -55,7 +55,7 @@ export const updatePatient = asyncHandler(async (req, res) => {
     //Dounts:
     //1)Not sure if profile image will be updated
 
-
+    
     return res.status(200).json(
         new ApiResponse(200, newPatient, "Patient's Profile Updated Successfull")
     );

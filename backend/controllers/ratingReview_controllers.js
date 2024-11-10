@@ -12,11 +12,13 @@ export const createRating = asyncHandler(async (req, res) => {
     
    const userId=req.body._id;
    const user =await User.findById(userId);
+    user.password=null;
 
    if(!user.patient_id)
         throw new ApiError(400,"Only patients can add their review");
 
    const patient=await Patient.findById(user.patient_id);
+    patient.medical_history=null;
 
    const {doctorId,rating,review}=req.body;
 
@@ -66,6 +68,16 @@ export const createRating = asyncHandler(async (req, res) => {
 
     return res.status(200).json(
         new ApiResponse(200, newRating, "Rating and Review created successfully for the Doctor")
+    );
+
+});
+
+export const getAllRating = asyncHandler(async (req, res) => {
+    
+   
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Patient's details fetched successfully")
     );
 
 });
