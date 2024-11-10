@@ -26,13 +26,15 @@ const userSchema = new mongoose.Schema({
         type:String,
         default:null,
     },
-    patient_id:{
-        type:String,
-        default:null,
+    patient_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Patient",
+    default: null,
     },
-    doctor_id:{
-        type:String,
-        default:null,
+    doctor_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Doctor",
+    default: null,
     }
 });
 

@@ -420,3 +420,22 @@ export const resetPassword = asyncHandler(async (req, res) => {
     );
 
 });
+
+
+export const deleteUser = asyncHandler(async (req, res) => {
+    
+    const id = req.body._id;
+    const user=await User.findById(id);
+    const otherId=user.role==="Patient"?user.patient_id:user.doctor_id;
+
+    if(user.role==="Patient")
+        await Patient.findByIdAndDelete(otherId);
+    if(user.role==="Doctor")
+        await Doctor.findByIdAndDelete(otherId);
+    await User.findByIdAndDelete(id);
+    
+    return res.status(200).json(
+        new ApiResponse(200, newUser, "User Successfully Deleted")
+    );
+
+});
