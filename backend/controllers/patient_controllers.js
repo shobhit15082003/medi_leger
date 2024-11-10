@@ -77,3 +77,5 @@ export const getAllDetailsPatient = asyncHandler(async (req, res) => {
 
 });
 
+
+
