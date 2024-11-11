@@ -48,9 +48,16 @@ medi_ledger/
   PORT=
   DATABASE_URL=""
 
+  JWT_SECRET=
+
   CLOUDINARY_CLOUD_NAME=
   CLOUDINARY_API_KEY=
   CLOUDINARY_API_SECRET=
+
+  MAIL_PASSWORD=
+  MAIL_USER=
+  MAIL_HOST=
+  MAIL_PORT=
   ```
 
 3. Run the backend server:
