@@ -44,6 +44,9 @@ export const signup = asyncHandler(async (req, res) => {
         license_number,
         work_address,
         otp,
+        emergencyContact,
+        yearsOfExperience,
+
     } = req.body;
     
     if (!username||!email||!password||!confirmPassword||!role||!first_name||!last_name||!gender||!contact_info) {
@@ -63,6 +66,9 @@ export const signup = asyncHandler(async (req, res) => {
         if(!aadhar_number){
             throw new ApiError(400,"Address is required");
         }
+        if(!emergencyContact){
+            throw new ApiError(400,"Address is required");
+        }
         if(aadhar_number.length!==12) {
             throw new ApiError(400,"Enter a 12 digit valid aadhar number");
         }
@@ -77,6 +83,10 @@ export const signup = asyncHandler(async (req, res) => {
         if(!work_address){
             throw new ApiError(400,"Work Address is required");
         }
+        if(!yearsOfExperience){
+            throw new ApiError(400,"Years of Experience is required");
+        }
+        
     }
 
     //if confirm password and password do not match
@@ -142,21 +152,25 @@ export const signup = asyncHandler(async (req, res) => {
             image:imageUrl,
             aadhar_number:aadhar_number,
             user_id:newUser._id,
+            emergencyContact:emergencyContact,
         });
     }
-    else if(role==="Doctor") {
+    else if(role === "Doctor") {
         newDoctor = await Doctor.create({
-            first_name:first_name,
-            last_name:last_name,
-            specialization:specialization,
-            contact_info:contact_info,
-            gender:gender,
-            license_number:license_number,
-            work_address:work_address,
-            image:imageUrl,
-            user_id:newUser._id,
+            first_name: first_name,
+            last_name: last_name,
+            specialization: specialization,
+            contact_info: contact_info,
+            gender: gender,
+            license_number: license_number,
+            work_address: work_address,
+            image: imageUrl,
+            user_id: newUser._id,
+           yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
+            availability: false,
         });
     }
+    
 
     const updatedUser = await User.findByIdAndUpdate(
         newUser._id, 
@@ -178,6 +192,10 @@ export const signup = asyncHandler(async (req, res) => {
     // 3)Dealing with otp is still left and needs to done and updated over here
 });
 
+
+
+
+
 //login
 export const login = asyncHandler(async (req, res) => {
     //getting the credentials
@@ -194,7 +212,10 @@ export const login = asyncHandler(async (req, res) => {
     }
     
     if(user.role==="Doctor")
+    {
         user=await User.findOne({email:email}).populate("Doctor");
+        user.availability=true;
+    }   
     else if(user.role==="Patient")
         user=await User.findOne({email:email}).populate("Doctor");
     
@@ -229,6 +250,11 @@ export const login = asyncHandler(async (req, res) => {
     }
 
 });
+
+
+
+
+
 
 //otp
 export const sendOTP = asyncHandler(async (req, res) => {
@@ -268,6 +294,10 @@ export const sendOTP = asyncHandler(async (req, res) => {
 
 
 });
+
+
+
+
 
 //change password
 //VVVIP it need auth middleware to be called before calling it
@@ -318,6 +348,10 @@ export const changePassword = asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
 //request for reset password
 export const requestResetPassword = asyncHandler(async (req, res) => {
     
@@ -364,6 +398,10 @@ export const requestResetPassword = asyncHandler(async (req, res) => {
     );
 
 });
+
+
+
+
 
 
 //reset password
@@ -422,6 +460,9 @@ export const resetPassword = asyncHandler(async (req, res) => {
 });
 
 
+
+
+//delete a User
 export const deleteUser = asyncHandler(async (req, res) => {
     
     const id = req.body._id;
