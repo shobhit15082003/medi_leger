@@ -16,6 +16,8 @@ import Patient from '../models/Patient.js'
 import Doctor from '../models/Doctor.js'
 import OTP from '../models/Otp_model.js'
 import { mailSender } from '../utilities/mailSender.js'
+import Nurse from '../models/Nurse.js'
+import LabAssistant from '../models/LabAssistant.js'
 
 
 
@@ -46,6 +48,7 @@ export const signup = asyncHandler(async (req, res) => {
         otp,
         emergencyContact,
         yearsOfExperience,
+        // certificate,
 
     } = req.body;
     
@@ -79,6 +82,33 @@ export const signup = asyncHandler(async (req, res) => {
         }
         if(!license_number){
             throw new ApiError(400,"License Number is required");
+        }
+        if(!work_address){
+            throw new ApiError(400,"Work Address is required");
+        }
+        if(!yearsOfExperience){
+            throw new ApiError(400,"Years of Experience is required");
+        }
+        
+    }
+    else if(role==="Nurse"){
+        if(!license_number){
+            throw new ApiError(400,"License Number is required");
+        }
+        if(!work_address){
+            throw new ApiError(400,"Work Address is required");
+        }
+        if(!yearsOfExperience){
+            throw new ApiError(400,"Years of Experience is required");
+        }
+        
+    }
+    else if(role==="Lab Assistant"){
+        if (!specialization) {
+            throw new ApiError(400, "Specialization is required");
+        }
+        if(!certificate){
+            throw new ApiError(400,"Certificate is required");
         }
         if(!work_address){
             throw new ApiError(400,"Work Address is required");
@@ -140,7 +170,7 @@ export const signup = asyncHandler(async (req, res) => {
         role:role,
     });
 
-    let newPatient = null, newDoctor = null;
+    let newPatient = null, newDoctor = null, newNurse=null,newLabAssistant=null;
     if(role==="Patient") {
         newPatient = await Patient.create({
             first_name:first_name,
@@ -170,6 +200,34 @@ export const signup = asyncHandler(async (req, res) => {
             availability: false,
         });
     }
+    else if(role === "Nurse") {
+        newDoctor = await Nurse.create({
+            first_name: first_name,
+            last_name: last_name,
+            contact_info: contact_info,
+            gender: gender,
+            license_number: license_number,
+            work_address: work_address,
+            image: imageUrl,
+            user_id: newUser._id,
+           yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
+        });
+    }
+    else if(role === "Lab Assisatnt") {
+        newLabAssistant = await LabAssistant.create({
+            first_name: first_name,
+            last_name: last_name,
+            specialization: specialization,
+            contact_info: contact_info,
+            gender: gender,
+            certificate: certificate, // major issue : how to store certificate
+            work_address: work_address,
+            image: imageUrl,
+            user_id: newUser._id,
+           yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
+           assignedTests:null,
+        });
+    }
     
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -177,6 +235,8 @@ export const signup = asyncHandler(async (req, res) => {
         {
             patient_id: role==="Patient"? newPatient._id : null,
             doctor_id: role==="Doctor" ? newDoctor._id : null,
+            nurse_id: role==="Nurse" ? newNurse._id : null,
+            labAssistant_id: role==="Lab Assistant" ? newLabAssistant._id : null,
         },
         {
             new: true, // returns the updated document
@@ -213,12 +273,24 @@ export const login = asyncHandler(async (req, res) => {
     
     if(user.role==="Doctor")
     {
-        user=await User.findOne({email:email}).populate("Doctor");
+        user=await User.findOne({email:email}).populate("doctor_id");
         user.availability=true;
     }   
     else if(user.role==="Patient")
-        user=await User.findOne({email:email}).populate("Doctor");
-    
+    {
+        user=await User.findOne({email:email}).populate("patient_id");
+        user.availability=true;
+    } 
+    else if(user.role==="Nurse")
+    {
+        user=await User.findOne({email:email}).populate("nurse_id");
+        user.availability=true;
+    }
+    else if(user.role==="Lab Assistant")
+    {
+        user=await User.findOne({email:email}).populate("labAssistant_id");
+        user.availability=true;
+    }     
     //checking if password is correct
     if(bcrypt.compare(password,user.password)){
         const payload = {
@@ -467,12 +539,19 @@ export const deleteUser = asyncHandler(async (req, res) => {
     
     const id = req.body._id;
     const user=await User.findById(id);
-    const otherId=user.role==="Patient"?user.patient_id:user.doctor_id;
+    const otherId=user.role==="Patient"?user.patient_id:
+                  user.role==="Doctor"?user.doctor_id:
+                  user.role==="Nurse"?nurse.doctor_id:
+                  labAssistant_id;
 
     if(user.role==="Patient")
         await Patient.findByIdAndDelete(otherId);
-    if(user.role==="Doctor")
+    else if(user.role==="Doctor")
         await Doctor.findByIdAndDelete(otherId);
+    else if(user.role==="Nurse")
+        await Nurse.findByIdAndDelete(otherId);
+    else if(user.role==="Lab Assistant")
+        await LabAssistant.findByIdAndDelete(otherId);
     await User.findByIdAndDelete(id);
     
     return res.status(200).json(
