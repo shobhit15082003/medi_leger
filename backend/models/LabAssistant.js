@@ -44,7 +44,7 @@ const labAssistantSchema  = new mongoose.Schema({
 
     }, //sus
     yearsOfExperience:{
-        type:Number,
+        type:String,
         required:true,
     },
     

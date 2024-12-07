@@ -202,7 +202,7 @@ export const signup = asyncHandler(async (req, res) => {
         });
     }
     else if(role === "Nurse") {
-        newDoctor = await Nurse.create({
+        newNurse = await Nurse.create({
             first_name: first_name,
             last_name: last_name,
             contact_info: contact_info,
