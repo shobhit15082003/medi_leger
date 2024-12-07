@@ -8,6 +8,7 @@ import { mailSender } from '../utilities/mailSender.js'
 // librarires
 import bcrypt from "bcrypt"
 import otpGenerator from 'otp-generator'
+import jwt from 'jsonwebtoken';
 
 
 // models
@@ -15,7 +16,7 @@ import User from '../models/User.js'
 import Patient from '../models/Patient.js'
 import Doctor from '../models/Doctor.js'
 import OTP from '../models/Otp_model.js'
-import { mailSender } from '../utilities/mailSender.js'
+
 import Nurse from '../models/Nurse.js'
 import LabAssistant from '../models/LabAssistant.js'
 
@@ -265,7 +266,7 @@ export const login = asyncHandler(async (req, res) => {
         throw new ApiError(400,"All fields are required");
     }
 
-    const user =await User.findOne({email:email});
+    let user =await User.findOne({email:email});
 
     if(!user){
         throw new ApiError(400,"User is not registered");
@@ -297,8 +298,10 @@ export const login = asyncHandler(async (req, res) => {
             email:user.email,
             id:user._id,
             role:user.role,
-            patient_id:patient_id,
-            doctor_id:doctor_id,
+            patient_id:user.patient_id,
+            doctor_id:user.doctor_id,
+            nurse_id:user.nurse_id,
+            labAssistant_id:user.labAssistant_id,
         }
         const token = jwt.sign(payload,process.env.JWT_SECRET,{
             expiresIn:"10h",
@@ -361,7 +364,7 @@ export const sendOTP = asyncHandler(async (req, res) => {
     //when the otp is being created there is a pre being called which sends the otp there itself which sends the otp on email.
 
     return res.status(200).json(
-        new ApiResponse(200, updatedUser, "OTP Sent Successfully")
+        new ApiResponse(200, otpBody, "OTP Sent Successfully")
     )
 
 

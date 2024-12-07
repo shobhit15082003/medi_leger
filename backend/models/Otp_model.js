@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { mailSender } from '../utilities/mailSender.js'
 
 const otpSchema = new mongoose.Schema({
    email:{
