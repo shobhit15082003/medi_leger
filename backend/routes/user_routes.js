@@ -4,6 +4,8 @@ import {
     login,
     sendOTP,
     changePassword,
+    requestResetPassword,
+    resetPassword
 } from "../controllers/user_controllers.js";
 import upload from "../middlewares/multer_middleware.js"
 import verifyJWT from "../middlewares/auth_middleware.js";
@@ -17,5 +19,8 @@ userRouter.route("/signup").post(upload.single('image'), signup);
 userRouter.route("/login").post(login);
 userRouter.route("/otp").post(sendOTP);
 userRouter.route("/changepassword").post(auth,changePassword);
+userRouter.route("/requestresetpassword").post(requestResetPassword);
+userRouter.route("/resetpassword").post(resetPassword);
+
 
 export default userRouter;

@@ -376,7 +376,6 @@ export const sendOTP = asyncHandler(async (req, res) => {
 
 
 //change password
-//VVVIP it need auth middleware to be called before calling it
 export const changePassword = asyncHandler(async (req, res) => {
     
     const userDetails=await User.findById(req.user._id);  //little doubt whther it is _id or id
@@ -456,21 +455,22 @@ export const requestResetPassword = asyncHandler(async (req, res) => {
     //storing the otp in db
     const otpBody=await OTP.create({email,otp});
     console.log('Entry created in DB model');
+    console.log(otp);
 
     //sending the email
-    try{
-        const mail=await mailSender(userDetails.email,"Reset Password OTP",`Otp for password to be changed for ${userDetails.first_name} ${userDetails.last_name} with the email id: ${userDetails.email} the otp is ${otp}`);
-        console.log('Otp for changing of mail has been changed');
-        // console.log(mail.response);
-    }
-    catch(err){
-        throw new ApiError(400,"error in sending mail in reset password");
-        console.log(err.message);
-    }
+    // try{
+    //      const mail=await mailSender(userDetails.email,"Reset Password OTP",`Otp for password to be changed the email id: ${userDetails.email} the otp is ${otp}`);
+    //     console.log('Otp for changing of mail has been sent');
+    //      console.log(mail.response);
+    // }
+    // catch(err){
+    //     throw new ApiError(400,"error in sending mail in reset password");
+    //     console.log(err);
+    // }
 
 
     return res.status(200).json(
-        new ApiResponse(200, newUser, "OTP for reset password sent successfully")
+        new ApiResponse(200, user, "OTP for reset password sent successfully")
     );
 
 });
@@ -526,7 +526,15 @@ export const resetPassword = asyncHandler(async (req, res) => {
     console.log('Password updated successfully');
     console.log(newUser);
 
-
+    try{
+         const mail=await mailSender(newUser.email,"Password Reset",`Password for the email id: ${newUser.email} has been reset.`);
+        // console.log('Otp for changing of mail has been sent');
+         console.log(mail.response);
+    }
+    catch(err){
+        throw new ApiError(400,"error in sending mail in reset password");
+        console.log(err);
+    }
 
 
     return res.status(200).json(
