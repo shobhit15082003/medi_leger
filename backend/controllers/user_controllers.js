@@ -293,7 +293,7 @@ export const login = asyncHandler(async (req, res) => {
         user.availability=true;
     }     
     //checking if password is correct
-    if(bcrypt.compare(password,user.password)){
+    if(await bcrypt.compare(password,user.password)){
         const payload = {
             email:user.email,
             id:user._id,
@@ -306,6 +306,7 @@ export const login = asyncHandler(async (req, res) => {
         const token = jwt.sign(payload,process.env.JWT_SECRET,{
             expiresIn:"10h",
         });
+        
         user.password=undefined;
         user.token=token; //passing the token in the user's body
 
@@ -406,7 +407,7 @@ export const changePassword = asyncHandler(async (req, res) => {
 
     //sending mail
     try{
-        const mail=await mailSender(userDetails.email,"Password Changed",`Password has been changed for ${userDetails.first_name} ${userDetails.last_name} with the email id: ${userDetails.email}`);
+        const mail=await mailSender(userDetails.email,"Password Changed",`Password has been changed for the email id: ${userDetails.email}`);
         console.log('Email for Password successfully changed has been sent');
         console.log(mail.response);
     }

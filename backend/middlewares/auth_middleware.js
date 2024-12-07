@@ -4,15 +4,20 @@ import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
 const verifyJWT = asyncHandler( async(req, res, next) => {
-    const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+    const token = req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
         
     if(!token) {
         throw new ApiError(401, "Unauthorized request");
     }
     
+    console.log(token);
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("baka");
+    console.log(decodedToken);
 
-    const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
+    const user = await User.findById(decodedToken?.id).select("-password -refreshToken");
+    console.log("baka2");
+    console.log(user);
 
     if(!user) {
         throw new ApiError(401, "Invalid Access Token")
