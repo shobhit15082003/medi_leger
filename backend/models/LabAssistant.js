@@ -1,6 +1,6 @@
 import mongoose from "mongoose";    
 
-const doctorSchema  = new mongoose.Schema({
+const labAssistantSchema  = new mongoose.Schema({
     first_name:{
         type:String,
         required:true,
@@ -21,9 +21,9 @@ const doctorSchema  = new mongoose.Schema({
 	gender:{
         type:String,
     },
-    license_number:{
+    certificate:{
         type:String,
-		unique: true, // Ensures each doctor has a unique license number
+		required:true,
     },
     work_address:{
         type:String,
@@ -32,10 +32,10 @@ const doctorSchema  = new mongoose.Schema({
     image:{
         type:String,
     },
-    ratingAndReviews: [
+    assignedTests: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
-			ref: "RatingAndReview",
+			ref: "LabResult",
 		},
 	],
     user_id:{
@@ -47,14 +47,11 @@ const doctorSchema  = new mongoose.Schema({
         type:String,
         required:true,
     },
-    availability:{
-        type:Boolean,
-        default:false,
-    }
+    
 
 	
 	
 });
 
-const Doctor = mongoose.model("Doctor",doctorSchema);
-export default Doctor;
+const LabAssistant = mongoose.model("LabAssistant",labAssistantSchema);
+export default LabAssistant;
