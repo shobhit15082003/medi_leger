@@ -8,10 +8,11 @@ export const mailSender = async(email,title,body)=>{
         let transporter=nodemailer.createTransport({
             host:process.env.MAIL_HOST,
             port:process.env.MAIL_PORT,
-            secure: process.env.MAIL_PORT == 465, // true for 465, false for other ports
+            secure:false, // true for 465, false for other ports
             auth:{
                 user:process.env.MAIL_USER,
                 pass:process.env.MAIL_PASS,
+                // pass:"nxkc zgqb nxre lopo",
             },
         });
         
@@ -29,6 +30,10 @@ export const mailSender = async(email,title,body)=>{
     catch(error){
         console.log('Error while sending email');
         console.log('Error in mailSender util');
+        console.log(process.env.MAIL_HOST);
+        console.log(process.env.MAIL_PORT);
+        console.log(process.env.MAIL_USER);
+        console.log(process.env.MAIL_PASS);
         console.log(error.message);
         throw new Error(error); // Re-throw the error if you want to handle it elsewhere
     }

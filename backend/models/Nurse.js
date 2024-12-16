@@ -1,6 +1,6 @@
 import mongoose from "mongoose";    
 
-const doctorSchema  = new mongoose.Schema({
+const nurseSchema  = new mongoose.Schema({
     first_name:{
         type:String,
         required:true,
@@ -11,9 +11,6 @@ const doctorSchema  = new mongoose.Schema({
         required:true,
         trim:true,
     },
-	specialization:{
-		type:[String],
-	},
 	contact_info:{
         type:String,
         required:true,
@@ -23,7 +20,7 @@ const doctorSchema  = new mongoose.Schema({
     },
     license_number:{
         type:String,
-		unique: true, // Ensures each doctor has a unique license number
+		unique: true, 
     },
     work_address:{
         type:String,
@@ -32,12 +29,6 @@ const doctorSchema  = new mongoose.Schema({
     image:{
         type:String,
     },
-    ratingAndReviews: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "RatingAndReview",
-		},
-	],
     user_id:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
@@ -47,14 +38,11 @@ const doctorSchema  = new mongoose.Schema({
         type:String,
         required:true,
     },
-    availability:{
-        type:Boolean,
-        default:false,
-    }
+    
 
 	
 	
 });
 
-const Doctor = mongoose.model("Doctor",doctorSchema);
-export default Doctor;
+const Nurse = mongoose.model("Nurse",nurseSchema);
+export default Nurse;
