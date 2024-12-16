@@ -11,11 +11,11 @@ const medicalRecordSchema = new mongoose.Schema({
         ref:'Doctor',
         required:true,
     },
-    nurse_id:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:'Nurse',
-        required:true,
-    },
+    // nurse_id:{
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref:'Nurse',
+    //     required:true,
+    // },
     diagnosis:{
         type:String,
         required:true,

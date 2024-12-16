@@ -1,6 +1,6 @@
 import mongoose from "mongoose";    
 
-// const labAssistantSchema  = new mongoose.Schema({
+const labAssistantSchema  = new mongoose.Schema({
 //     first_name:{
 //         type:String,
 //         required:true,
@@ -51,7 +51,7 @@ import mongoose from "mongoose";
 
 	
 	
-// });
+});
 
 const LabAssistant = mongoose.model("LabAssistant",labAssistantSchema);
 export default LabAssistant;
