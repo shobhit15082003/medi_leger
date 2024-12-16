@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["Doctor", "Patient", "Nurse", "Lab Assistant"],
+    enum: ["Doctor", "Patient"],
     required: true,
   },
   token: {
@@ -35,16 +35,16 @@ const userSchema = new mongoose.Schema({
     ref: "Doctor",
     default: null,
   },
-  nurse_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Nurse",
-    default: null,
-  },
-  labAssistant_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "LabAssistant",
-    default: null,
-  },
+  // nurse_id: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "Nurse",
+  //   default: null,
+  // },
+  // labAssistant_id: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "LabAssistant",
+  //   default: null,
+  // },
 });
 
 const User = mongoose.model("User", userSchema);

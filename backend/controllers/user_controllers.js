@@ -92,33 +92,33 @@ export const signup = asyncHandler(async (req, res) => {
         }
         
     }
-    else if(role==="Nurse"){
-        if(!license_number){
-            throw new ApiError(400,"License Number is required");
-        }
-        if(!work_address){
-            throw new ApiError(400,"Work Address is required");
-        }
-        if(!yearsOfExperience){
-            throw new ApiError(400,"Years of Experience is required");
-        }
+    // else if(role==="Nurse"){
+    //     if(!license_number){
+    //         throw new ApiError(400,"License Number is required");
+    //     }
+    //     if(!work_address){
+    //         throw new ApiError(400,"Work Address is required");
+    //     }
+    //     if(!yearsOfExperience){
+    //         throw new ApiError(400,"Years of Experience is required");
+    //     }
         
-    }
-    else if(role==="Lab Assistant"){
-        if (!specialization) {
-            throw new ApiError(400, "Specialization is required");
-        }
-        if(!certificate){
-            throw new ApiError(400,"Certificate is required");
-        }
-        if(!work_address){
-            throw new ApiError(400,"Work Address is required");
-        }
-        if(!yearsOfExperience){
-            throw new ApiError(400,"Years of Experience is required");
-        }
+    // }
+    // else if(role==="Lab Assistant"){
+    //     if (!specialization) {
+    //         throw new ApiError(400, "Specialization is required");
+    //     }
+    //     if(!certificate){
+    //         throw new ApiError(400,"Certificate is required");
+    //     }
+    //     if(!work_address){
+    //         throw new ApiError(400,"Work Address is required");
+    //     }
+    //     if(!yearsOfExperience){
+    //         throw new ApiError(400,"Years of Experience is required");
+    //     }
         
-    }
+    // }
 
     //if confirm password and password do not match
     if(confirmPassword!==password){
@@ -201,34 +201,34 @@ export const signup = asyncHandler(async (req, res) => {
             availability: false,
         });
     }
-    else if(role === "Nurse") {
-        newNurse = await Nurse.create({
-            first_name: first_name,
-            last_name: last_name,
-            contact_info: contact_info,
-            gender: gender,
-            license_number: license_number,
-            work_address: work_address,
-            image: imageUrl,
-            user_id: newUser._id,
-           yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
-        });
-    }
-    else if(role === "Lab Assisatnt") {
-        newLabAssistant = await LabAssistant.create({
-            first_name: first_name,
-            last_name: last_name,
-            specialization: specialization,
-            contact_info: contact_info,
-            gender: gender,
-            certificate: certificate, // major issue : how to store certificate
-            work_address: work_address,
-            image: imageUrl,
-            user_id: newUser._id,
-           yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
-           assignedTests:null,
-        });
-    }
+    // else if(role === "Nurse") {
+    //     newNurse = await Nurse.create({
+    //         first_name: first_name,
+    //         last_name: last_name,
+    //         contact_info: contact_info,
+    //         gender: gender,
+    //         license_number: license_number,
+    //         work_address: work_address,
+    //         image: imageUrl,
+    //         user_id: newUser._id,
+    //        yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
+    //     });
+    // }
+    // else if(role === "Lab Assisatnt") {
+    //     newLabAssistant = await LabAssistant.create({
+    //         first_name: first_name,
+    //         last_name: last_name,
+    //         specialization: specialization,
+    //         contact_info: contact_info,
+    //         gender: gender,
+    //         certificate: certificate, // major issue : how to store certificate
+    //         work_address: work_address,
+    //         image: imageUrl,
+    //         user_id: newUser._id,
+    //        yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
+    //        assignedTests:null,
+    //     });
+    // }
     
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -236,8 +236,8 @@ export const signup = asyncHandler(async (req, res) => {
         {
             patient_id: role==="Patient"? newPatient._id : null,
             doctor_id: role==="Doctor" ? newDoctor._id : null,
-            nurse_id: role==="Nurse" ? newNurse._id : null,
-            labAssistant_id: role==="Lab Assistant" ? newLabAssistant._id : null,
+            // nurse_id: role==="Nurse" ? newNurse._id : null,
+            // labAssistant_id: role==="Lab Assistant" ? newLabAssistant._id : null,
         },
         {
             new: true, // returns the updated document
@@ -282,16 +282,18 @@ export const login = asyncHandler(async (req, res) => {
         user=await User.findOne({email:email}).populate("patient_id");
         user.availability=true;
     } 
-    else if(user.role==="Nurse")
-    {
-        user=await User.findOne({email:email}).populate("nurse_id");
-        user.availability=true;
-    }
-    else if(user.role==="Lab Assistant")
-    {
-        user=await User.findOne({email:email}).populate("labAssistant_id");
-        user.availability=true;
-    }     
+    // else if(user.role==="Nurse")
+    // {
+    //     user=await User.findOne({email:email}).populate("nurse_id");
+    //     user.availability=true;
+    // }
+    // else if(user.role==="Lab Assistant")
+    // {
+    //     user=await User.findOne({email:email}).populate("labAssistant_id");
+    //     user.availability=true;
+    // }  
+    
+    
     //checking if password is correct
     if(await bcrypt.compare(password,user.password)){
         const payload = {
@@ -549,25 +551,26 @@ export const resetPassword = asyncHandler(async (req, res) => {
 //delete a User
 export const deleteUser = asyncHandler(async (req, res) => {
     
-    const id = req.body._id;
-    const user=await User.findById(id);
+    
+    const user=await User.findById(req.user._id);
+   
     const otherId=user.role==="Patient"?user.patient_id:
-                  user.role==="Doctor"?user.doctor_id:
-                  user.role==="Nurse"?nurse.doctor_id:
-                  labAssistant_id;
+                  user.doctor_id;
+                //   user.role==="Nurse"?nurse.nurse_id:
+                //   labAssistant_id;
 
     if(user.role==="Patient")
         await Patient.findByIdAndDelete(otherId);
     else if(user.role==="Doctor")
         await Doctor.findByIdAndDelete(otherId);
-    else if(user.role==="Nurse")
-        await Nurse.findByIdAndDelete(otherId);
-    else if(user.role==="Lab Assistant")
-        await LabAssistant.findByIdAndDelete(otherId);
-    await User.findByIdAndDelete(id);
+    // else if(user.role==="Nurse")
+    //     await Nurse.findByIdAndDelete(otherId);
+    // else if(user.role==="Lab Assistant")
+    //     await LabAssistant.findByIdAndDelete(otherId);
+    await User.findByIdAndDelete(req.user._id);
     
     return res.status(200).json(
-        new ApiResponse(200, newUser, "User Successfully Deleted")
+        new ApiResponse(200, "", "User Successfully Deleted")
     );
 
 });
