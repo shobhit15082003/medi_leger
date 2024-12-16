@@ -43,4 +43,4 @@ const isDoctor = asyncHandler( async(req, res, next) => {
 //exporting
 export { isPatient, isDoctor };
 
-//hello
+//helloss
