@@ -163,6 +163,8 @@ export const signup = asyncHandler(async (req, res) => {
      
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedAadhar_number = `**** **** ${aadhar_number.slice(-4)}`;
+
 
     const newUser = await User.create({
         username: username,
@@ -181,7 +183,7 @@ export const signup = asyncHandler(async (req, res) => {
             contact_info:contact_info,
             address:address,
             image:imageUrl,
-            aadhar_number:aadhar_number,
+            aadhar_number:hashedAadhar_number,
             user_id:newUser._id,
             emergencyContact:emergencyContact,
         });
