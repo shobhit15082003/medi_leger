@@ -8,6 +8,7 @@ import { mailSender } from '../utilities/mailSender.js'
 // librarires
 import bcrypt from "bcrypt"
 import otpGenerator from 'otp-generator'
+import jwt from 'jsonwebtoken';
 
 
 // models
@@ -15,7 +16,9 @@ import User from '../models/User.js'
 import Patient from '../models/Patient.js'
 import Doctor from '../models/Doctor.js'
 import OTP from '../models/Otp_model.js'
-import { mailSender } from '../utilities/mailSender.js'
+
+import Nurse from '../models/Nurse.js'
+import LabAssistant from '../models/LabAssistant.js'
 
 
 
@@ -44,6 +47,10 @@ export const signup = asyncHandler(async (req, res) => {
         license_number,
         work_address,
         otp,
+        emergencyContact,
+        yearsOfExperience,
+        // certificate,
+
     } = req.body;
     
     if (!username||!email||!password||!confirmPassword||!role||!first_name||!last_name||!gender||!contact_info) {
@@ -63,6 +70,9 @@ export const signup = asyncHandler(async (req, res) => {
         if(!aadhar_number){
             throw new ApiError(400,"Address is required");
         }
+        if(!emergencyContact){
+            throw new ApiError(400,"Address is required");
+        }
         if(aadhar_number.length!==12) {
             throw new ApiError(400,"Enter a 12 digit valid aadhar number");
         }
@@ -77,7 +87,38 @@ export const signup = asyncHandler(async (req, res) => {
         if(!work_address){
             throw new ApiError(400,"Work Address is required");
         }
+        if(!yearsOfExperience){
+            throw new ApiError(400,"Years of Experience is required");
+        }
+        
     }
+    // else if(role==="Nurse"){
+    //     if(!license_number){
+    //         throw new ApiError(400,"License Number is required");
+    //     }
+    //     if(!work_address){
+    //         throw new ApiError(400,"Work Address is required");
+    //     }
+    //     if(!yearsOfExperience){
+    //         throw new ApiError(400,"Years of Experience is required");
+    //     }
+        
+    // }
+    // else if(role==="Lab Assistant"){
+    //     if (!specialization) {
+    //         throw new ApiError(400, "Specialization is required");
+    //     }
+    //     if(!certificate){
+    //         throw new ApiError(400,"Certificate is required");
+    //     }
+    //     if(!work_address){
+    //         throw new ApiError(400,"Work Address is required");
+    //     }
+    //     if(!yearsOfExperience){
+    //         throw new ApiError(400,"Years of Experience is required");
+    //     }
+        
+    // }
 
     //if confirm password and password do not match
     if(confirmPassword!==password){
@@ -130,7 +171,7 @@ export const signup = asyncHandler(async (req, res) => {
         role:role,
     });
 
-    let newPatient = null, newDoctor = null;
+    let newPatient = null, newDoctor = null, newNurse=null,newLabAssistant=null;
     if(role==="Patient") {
         newPatient = await Patient.create({
             first_name:first_name,
@@ -142,27 +183,61 @@ export const signup = asyncHandler(async (req, res) => {
             image:imageUrl,
             aadhar_number:aadhar_number,
             user_id:newUser._id,
+            emergencyContact:emergencyContact,
         });
     }
-    else if(role==="Doctor") {
+    else if(role === "Doctor") {
         newDoctor = await Doctor.create({
-            first_name:first_name,
-            last_name:last_name,
-            specialization:specialization,
-            contact_info:contact_info,
-            gender:gender,
-            license_number:license_number,
-            work_address:work_address,
-            image:imageUrl,
-            user_id:newUser._id,
+            first_name: first_name,
+            last_name: last_name,
+            specialization: specialization,
+            contact_info: contact_info,
+            gender: gender,
+            license_number: license_number,
+            work_address: work_address,
+            image: imageUrl,
+            user_id: newUser._id,
+           yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
+            availability: false,
         });
     }
+    // else if(role === "Nurse") {
+    //     newNurse = await Nurse.create({
+    //         first_name: first_name,
+    //         last_name: last_name,
+    //         contact_info: contact_info,
+    //         gender: gender,
+    //         license_number: license_number,
+    //         work_address: work_address,
+    //         image: imageUrl,
+    //         user_id: newUser._id,
+    //        yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
+    //     });
+    // }
+    // else if(role === "Lab Assisatnt") {
+    //     newLabAssistant = await LabAssistant.create({
+    //         first_name: first_name,
+    //         last_name: last_name,
+    //         specialization: specialization,
+    //         contact_info: contact_info,
+    //         gender: gender,
+    //         certificate: certificate, // major issue : how to store certificate
+    //         work_address: work_address,
+    //         image: imageUrl,
+    //         user_id: newUser._id,
+    //        yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
+    //        assignedTests:null,
+    //     });
+    // }
+    
 
     const updatedUser = await User.findByIdAndUpdate(
         newUser._id, 
         {
             patient_id: role==="Patient"? newPatient._id : null,
             doctor_id: role==="Doctor" ? newDoctor._id : null,
+            // nurse_id: role==="Nurse" ? newNurse._id : null,
+            // labAssistant_id: role==="Lab Assistant" ? newLabAssistant._id : null,
         },
         {
             new: true, // returns the updated document
@@ -178,6 +253,10 @@ export const signup = asyncHandler(async (req, res) => {
     // 3)Dealing with otp is still left and needs to done and updated over here
 });
 
+
+
+
+
 //login
 export const login = asyncHandler(async (req, res) => {
     //getting the credentials
@@ -187,29 +266,49 @@ export const login = asyncHandler(async (req, res) => {
         throw new ApiError(400,"All fields are required");
     }
 
-    const user =await User.findOne({email:email});
+    let user =await User.findOne({email:email});
 
     if(!user){
         throw new ApiError(400,"User is not registered");
     }
     
     if(user.role==="Doctor")
-        user=await User.findOne({email:email}).populate("Doctor");
+    {
+        user=await User.findOne({email:email}).populate("doctor_id");
+        user.availability=true;
+    }   
     else if(user.role==="Patient")
-        user=await User.findOne({email:email}).populate("Doctor");
+    {
+        user=await User.findOne({email:email}).populate("patient_id");
+        user.availability=true;
+    } 
+    // else if(user.role==="Nurse")
+    // {
+    //     user=await User.findOne({email:email}).populate("nurse_id");
+    //     user.availability=true;
+    // }
+    // else if(user.role==="Lab Assistant")
+    // {
+    //     user=await User.findOne({email:email}).populate("labAssistant_id");
+    //     user.availability=true;
+    // }  
+    
     
     //checking if password is correct
-    if(bcrypt.compare(password,user.password)){
+    if(await bcrypt.compare(password,user.password)){
         const payload = {
             email:user.email,
             id:user._id,
             role:user.role,
-            patient_id:patient_id,
-            doctor_id:doctor_id,
+            patient_id:user.patient_id,
+            doctor_id:user.doctor_id,
+            nurse_id:user.nurse_id,
+            labAssistant_id:user.labAssistant_id,
         }
         const token = jwt.sign(payload,process.env.JWT_SECRET,{
             expiresIn:"10h",
         });
+        
         user.password=undefined;
         user.token=token; //passing the token in the user's body
 
@@ -229,6 +328,11 @@ export const login = asyncHandler(async (req, res) => {
     }
 
 });
+
+
+
+
+
 
 //otp
 export const sendOTP = asyncHandler(async (req, res) => {
@@ -263,14 +367,17 @@ export const sendOTP = asyncHandler(async (req, res) => {
     //when the otp is being created there is a pre being called which sends the otp there itself which sends the otp on email.
 
     return res.status(200).json(
-        new ApiResponse(200, updatedUser, "OTP Sent Successfully")
+        new ApiResponse(200, otpBody, "OTP Sent Successfully")
     )
 
 
 });
 
+
+
+
+
 //change password
-//VVVIP it need auth middleware to be called before calling it
 export const changePassword = asyncHandler(async (req, res) => {
     
     const userDetails=await User.findById(req.user._id);  //little doubt whther it is _id or id
@@ -301,7 +408,7 @@ export const changePassword = asyncHandler(async (req, res) => {
 
     //sending mail
     try{
-        const mail=await mailSender(userDetails.email,"Password Changed",`Password has been changed for ${userDetails.first_name} ${userDetails.last_name} with the email id: ${userDetails.email}`);
+        const mail=await mailSender(userDetails.email,"Password Changed",`Password has been changed for the email id: ${userDetails.email}`);
         console.log('Email for Password successfully changed has been sent');
         console.log(mail.response);
     }
@@ -315,6 +422,10 @@ export const changePassword = asyncHandler(async (req, res) => {
     );
 
 });
+
+
+
+
 
 
 
@@ -346,24 +457,29 @@ export const requestResetPassword = asyncHandler(async (req, res) => {
     //storing the otp in db
     const otpBody=await OTP.create({email,otp});
     console.log('Entry created in DB model');
+    console.log(otp);
 
     //sending the email
-    try{
-        const mail=await mailSender(userDetails.email,"Reset Password OTP",`Otp for password to be changed for ${userDetails.first_name} ${userDetails.last_name} with the email id: ${userDetails.email} the otp is ${otp}`);
-        console.log('Otp for changing of mail has been changed');
-        // console.log(mail.response);
-    }
-    catch(err){
-        throw new ApiError(400,"error in sending mail in reset password");
-        console.log(err.message);
-    }
+    // try{
+    //      const mail=await mailSender(userDetails.email,"Reset Password OTP",`Otp for password to be changed the email id: ${userDetails.email} the otp is ${otp}`);
+    //     console.log('Otp for changing of mail has been sent');
+    //      console.log(mail.response);
+    // }
+    // catch(err){
+    //     throw new ApiError(400,"error in sending mail in reset password");
+    //     console.log(err);
+    // }
 
 
     return res.status(200).json(
-        new ApiResponse(200, newUser, "OTP for reset password sent successfully")
+        new ApiResponse(200, user, "OTP for reset password sent successfully")
     );
 
 });
+
+
+
+
 
 
 //reset password
@@ -412,7 +528,15 @@ export const resetPassword = asyncHandler(async (req, res) => {
     console.log('Password updated successfully');
     console.log(newUser);
 
-
+    try{
+         const mail=await mailSender(newUser.email,"Password Reset",`Password for the email id: ${newUser.email} has been reset.`);
+        // console.log('Otp for changing of mail has been sent');
+         console.log(mail.response);
+    }
+    catch(err){
+        throw new ApiError(400,"error in sending mail in reset password");
+        console.log(err);
+    }
 
 
     return res.status(200).json(
@@ -422,20 +546,31 @@ export const resetPassword = asyncHandler(async (req, res) => {
 });
 
 
+
+
+//delete a User
 export const deleteUser = asyncHandler(async (req, res) => {
     
-    const id = req.body._id;
-    const user=await User.findById(id);
-    const otherId=user.role==="Patient"?user.patient_id:user.doctor_id;
+    
+    const user=await User.findById(req.user._id);
+   
+    const otherId=user.role==="Patient"?user.patient_id:
+                  user.doctor_id;
+                //   user.role==="Nurse"?nurse.nurse_id:
+                //   labAssistant_id;
 
     if(user.role==="Patient")
         await Patient.findByIdAndDelete(otherId);
-    if(user.role==="Doctor")
+    else if(user.role==="Doctor")
         await Doctor.findByIdAndDelete(otherId);
-    await User.findByIdAndDelete(id);
+    // else if(user.role==="Nurse")
+    //     await Nurse.findByIdAndDelete(otherId);
+    // else if(user.role==="Lab Assistant")
+    //     await LabAssistant.findByIdAndDelete(otherId);
+    await User.findByIdAndDelete(req.user._id);
     
     return res.status(200).json(
-        new ApiResponse(200, newUser, "User Successfully Deleted")
+        new ApiResponse(200, "", "User Successfully Deleted")
     );
 
 });

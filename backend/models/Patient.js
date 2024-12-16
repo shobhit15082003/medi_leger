@@ -49,6 +49,13 @@ const patientSchema = new mongoose.Schema({
 		},
         
 	],
+    isActive:{
+        type:Boolean,
+    },
+    emergencyContact:{
+        type:Number,
+        required: true,
+    }
 
 
 
