@@ -17,8 +17,8 @@ import Patient from '../models/Patient.js'
 import Doctor from '../models/Doctor.js'
 import OTP from '../models/Otp_model.js'
 
-import Nurse from '../models/Nurse.js'
-import LabAssistant from '../models/LabAssistant.js'
+// import Nurse from '../models/Nurse.js'
+// import LabAssistant from '../models/LabAssistant.js'
 
 
 
