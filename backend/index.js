@@ -6,11 +6,7 @@ const port = process.env.PORT || 4000;
 
 //routes
 import userRoutes from './routes/user_routes.js';
-app.use('/api/v1/auth', userRoutes); // This works if the import is correct
-
-
-
-
+app.use('/api/v1/user', userRoutes); // This works if the import is correct
 
 dbConnect()
 .then(() => {

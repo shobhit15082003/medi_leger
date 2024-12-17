@@ -11,11 +11,6 @@ const labResultSchema  = new mongoose.Schema({
         ref:'Doctor',
         required:true,
     },
-    // labAssistant_id:{
-    //     type:mongoose.Schema.Types.ObjectId,
-    //     ref:'LabAssistant',
-    //     required:true,
-    // },
     facility_name:{ //new point added
         type:String,
         required:true,

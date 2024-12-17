@@ -10,22 +10,11 @@ import bcrypt from "bcrypt"
 import otpGenerator from 'otp-generator'
 import jwt from 'jsonwebtoken';
 
-
 // models
 import User from '../models/User.js'
 import Patient from '../models/Patient.js'
 import Doctor from '../models/Doctor.js'
 import OTP from '../models/Otp_model.js'
-
-// import Nurse from '../models/Nurse.js'
-// import LabAssistant from '../models/LabAssistant.js'
-
-
-
-
-
-
-
 
 //signup
 export const signup = asyncHandler(async (req, res) => {
@@ -68,10 +57,10 @@ export const signup = asyncHandler(async (req, res) => {
             throw new ApiError(400,"Address is required");
         }
         if(!aadhar_number){
-            throw new ApiError(400,"Address is required");
+            throw new ApiError(400,"Aadhar Details are required");
         }
         if(!emergencyContact){
-            throw new ApiError(400,"Address is required");
+            throw new ApiError(400,"Emergency Contact is required");
         }
         if(aadhar_number.length!==12) {
             throw new ApiError(400,"Enter a 12 digit valid aadhar number");
@@ -89,36 +78,8 @@ export const signup = asyncHandler(async (req, res) => {
         }
         if(!yearsOfExperience){
             throw new ApiError(400,"Years of Experience is required");
-        }
-        
+        }   
     }
-    // else if(role==="Nurse"){
-    //     if(!license_number){
-    //         throw new ApiError(400,"License Number is required");
-    //     }
-    //     if(!work_address){
-    //         throw new ApiError(400,"Work Address is required");
-    //     }
-    //     if(!yearsOfExperience){
-    //         throw new ApiError(400,"Years of Experience is required");
-    //     }
-        
-    // }
-    // else if(role==="Lab Assistant"){
-    //     if (!specialization) {
-    //         throw new ApiError(400, "Specialization is required");
-    //     }
-    //     if(!certificate){
-    //         throw new ApiError(400,"Certificate is required");
-    //     }
-    //     if(!work_address){
-    //         throw new ApiError(400,"Work Address is required");
-    //     }
-    //     if(!yearsOfExperience){
-    //         throw new ApiError(400,"Years of Experience is required");
-    //     }
-        
-    // }
 
     //if confirm password and password do not match
     if(confirmPassword!==password){
@@ -146,25 +107,22 @@ export const signup = asyncHandler(async (req, res) => {
     }
 
 
-     //find most recent otp
-     const recentOtp=await OTP.find({email}).sort({createdAt:-1}).limit(1); 
-     console.log(recentOtp[0].otp);
+    //find most recent otp
+    const recentOtp=await OTP.find({email}).sort({createdAt:-1}).limit(1); 
+    console.log(recentOtp[0].otp);
     //  console.log(otp);
  
-     //validate otp
-     if(recentOtp.length==0){
-       //OTP NOT FOUND
-       throw new ApiError(400,"OTP not found");
-     }
- 
-     else if(otp!==recentOtp[0].otp){
+    //validate otp
+    if(recentOtp.length==0){
+    //OTP NOT FOUND
+        throw new ApiError(400,"OTP not found");
+    }
+    else if(otp!==recentOtp[0].otp){
         throw new ApiError(400,"Wrong OTP");
-     }
+    }
      
-
     const hashedPassword = await bcrypt.hash(password, 10);
     const hashedAadhar_number = `**** **** ${aadhar_number.slice(-4)}`;
-
 
     const newUser = await User.create({
         username: username,
@@ -203,43 +161,12 @@ export const signup = asyncHandler(async (req, res) => {
             availability: false,
         });
     }
-    // else if(role === "Nurse") {
-    //     newNurse = await Nurse.create({
-    //         first_name: first_name,
-    //         last_name: last_name,
-    //         contact_info: contact_info,
-    //         gender: gender,
-    //         license_number: license_number,
-    //         work_address: work_address,
-    //         image: imageUrl,
-    //         user_id: newUser._id,
-    //        yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
-    //     });
-    // }
-    // else if(role === "Lab Assisatnt") {
-    //     newLabAssistant = await LabAssistant.create({
-    //         first_name: first_name,
-    //         last_name: last_name,
-    //         specialization: specialization,
-    //         contact_info: contact_info,
-    //         gender: gender,
-    //         certificate: certificate, // major issue : how to store certificate
-    //         work_address: work_address,
-    //         image: imageUrl,
-    //         user_id: newUser._id,
-    //        yearsOfExperience: yearsOfExperience ? `${yearsOfExperience}+` : "0+",
-    //        assignedTests:null,
-    //     });
-    // }
-    
 
     const updatedUser = await User.findByIdAndUpdate(
         newUser._id, 
         {
             patient_id: role==="Patient"? newPatient._id : null,
             doctor_id: role==="Doctor" ? newDoctor._id : null,
-            // nurse_id: role==="Nurse" ? newNurse._id : null,
-            // labAssistant_id: role==="Lab Assistant" ? newLabAssistant._id : null,
         },
         {
             new: true, // returns the updated document
@@ -247,25 +174,19 @@ export const signup = asyncHandler(async (req, res) => {
         }
     );
 
-
-
     return res.status(200).json(
         new ApiResponse(200, updatedUser, "User registered Successfully")
     )
     // 3)Dealing with otp is still left and needs to done and updated over here
 });
 
-
-
-
-
 //login
 export const login = asyncHandler(async (req, res) => {
     //getting the credentials
-    const {email,password}=req.body;
+    const {email, password}=req.body;
 
-    if(!email||!password){
-        throw new ApiError(400,"All fields are required");
+    if(!email || !password){
+        throw new ApiError(400,"All fields required");
     }
 
     let user =await User.findOne({email:email});
@@ -274,38 +195,25 @@ export const login = asyncHandler(async (req, res) => {
         throw new ApiError(400,"User is not registered");
     }
     
-    if(user.role==="Doctor")
-    {
+    if(user.role==="Doctor") {
         user=await User.findOne({email:email}).populate("doctor_id");
         user.availability=true;
     }   
-    else if(user.role==="Patient")
-    {
+    else if(user.role==="Patient") {
         user=await User.findOne({email:email}).populate("patient_id");
         user.availability=true;
-    } 
-    // else if(user.role==="Nurse")
-    // {
-    //     user=await User.findOne({email:email}).populate("nurse_id");
-    //     user.availability=true;
-    // }
-    // else if(user.role==="Lab Assistant")
-    // {
-    //     user=await User.findOne({email:email}).populate("labAssistant_id");
-    //     user.availability=true;
-    // }  
-    
+    }
     
     //checking if password is correct
     if(await bcrypt.compare(password,user.password)){
         const payload = {
-            email:user.email,
-            id:user._id,
-            role:user.role,
-            patient_id:user.patient_id,
-            doctor_id:user.doctor_id,
-            nurse_id:user.nurse_id,
-            labAssistant_id:user.labAssistant_id,
+            email: user.email,
+            id: user._id,
+            role: user.role,
+            patient_id: user.patient_id,
+            doctor_id: user.doctor_id,
+            nurse_id: user.nurse_id,
+            labAssistant_id: user.labAssistant_id,
         }
         const token = jwt.sign(payload,process.env.JWT_SECRET,{
             expiresIn:"10h",
@@ -314,7 +222,7 @@ export const login = asyncHandler(async (req, res) => {
         user.password=undefined;
         user.token=token; //passing the token in the user's body
 
-        const options ={
+        const options = {
             expires: new Date(Date.now()+3*24*60*60*1000),//3 days
             httpOnly:true
         }
@@ -328,17 +236,10 @@ export const login = asyncHandler(async (req, res) => {
     else{
         throw new ApiError(400, "Password is incorrect"); //wrong password
     }
-
 });
-
-
-
-
-
 
 //otp
 export const sendOTP = asyncHandler(async (req, res) => {
-
     const {email}=req.body;
 
     if(!email)
@@ -349,39 +250,28 @@ export const sendOTP = asyncHandler(async (req, res) => {
     if(registeredUser){
         throw new ApiError(400,"User is already registered");
     }
-
     
     var otp = otpGenerator.generate(6, { 
         digits: true, 
         upperCaseAlphabets: true, 
         lowerCaseAlphabets: false, 
         specialChars: false 
-    });
-    
+    }); 
 
     
     const otpBody=await OTP.create({email,otp});
     console.log('Entry created in DB model');
     // console.log(otpBody);
 
-
-
     //when the otp is being created there is a pre being called which sends the otp there itself which sends the otp on email.
 
     return res.status(200).json(
         new ApiResponse(200, otpBody, "OTP Sent Successfully")
     )
-
-
 });
 
-
-
-
-
 //change password
-export const changePassword = asyncHandler(async (req, res) => {
-    
+export const changePassword = asyncHandler(async (req, res) => {   
     const userDetails=await User.findById(req.user._id);  //little doubt whther it is _id or id
 
     const {oldPassword,newPassword,confirmNewPassword}=req.body;
@@ -407,7 +297,6 @@ export const changePassword = asyncHandler(async (req, res) => {
     console.log('Password updated successfully');
     console.log(newUser);
 
-
     //sending mail
     try{
         const mail=await mailSender(userDetails.email,"Password Changed",`Password has been changed for the email id: ${userDetails.email}`);
@@ -425,15 +314,8 @@ export const changePassword = asyncHandler(async (req, res) => {
 
 });
 
-
-
-
-
-
-
 //request for reset password
-export const requestResetPassword = asyncHandler(async (req, res) => {
-    
+export const requestResetPassword = asyncHandler(async (req, res) => {   
     const {email}=req.body;
 
     //checking if email is entered
@@ -476,13 +358,7 @@ export const requestResetPassword = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, user, "OTP for reset password sent successfully")
     );
-
 });
-
-
-
-
-
 
 //reset password
 export const resetPassword = asyncHandler(async (req, res) => {
@@ -544,35 +420,22 @@ export const resetPassword = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, newUser, "Password Reset successfull")
     );
-
 });
-
-
 
 
 //delete a User
 export const deleteUser = asyncHandler(async (req, res) => {
-    
-    
     const user=await User.findById(req.user._id);
    
-    const otherId=user.role==="Patient"?user.patient_id:
-                  user.doctor_id;
-                //   user.role==="Nurse"?nurse.nurse_id:
-                //   labAssistant_id;
+    const otherId = user.role==="Patient" ? user.patient_id : user.doctor_id;
 
     if(user.role==="Patient")
         await Patient.findByIdAndDelete(otherId);
     else if(user.role==="Doctor")
         await Doctor.findByIdAndDelete(otherId);
-    // else if(user.role==="Nurse")
-    //     await Nurse.findByIdAndDelete(otherId);
-    // else if(user.role==="Lab Assistant")
-    //     await LabAssistant.findByIdAndDelete(otherId);
     await User.findByIdAndDelete(req.user._id);
     
     return res.status(200).json(
         new ApiResponse(200, "", "User Successfully Deleted")
     );
-
 });
