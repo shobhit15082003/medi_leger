@@ -11,11 +11,6 @@ const appointmentSchema  = new mongoose.Schema({
         ref:'Doctor',
         required:true,
     },
-    // nurse_id:{
-    //     type:mongoose.Schema.Types.ObjectId,
-    //     ref:'Nurse',
-    //     // required:true,
-    // },
     status:{
         type: String,
         enum: [
