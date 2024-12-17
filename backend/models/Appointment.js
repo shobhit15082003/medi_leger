@@ -1,17 +1,17 @@
-import mongoose from "mongoose";    
+import mongoose from "mongoose";
 
-const appointmentSchema  = new mongoose.Schema({
+const appointmentSchema = new mongoose.Schema({
     patient_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Patient',
         required: true,
     },
-    doctor_id:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Doctor',
-        required:true,
+    doctor_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Doctor',
+        required: true,
     },
-    status:{
+    status: {
         type: String,
         enum: [
             'scheduled',
@@ -19,17 +19,16 @@ const appointmentSchema  = new mongoose.Schema({
             'diagnosing',
             'under_treatment',
             'monitoring',
-            'discharged'
+            'discharged',
         ],
         default: 'scheduled',
     },
-    summary:[{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'MedicalRecord',
-    }], //little doubt over here
-},
-    { timestamps: true } // Automatically adds createdAt and updatedAt
-);
+    summary: {
+        type: String, // single file URL for summary
+    },
+}, {
+    timestamps: true,
+});
 
-const Appointment = mongoose.model("Appointment",appointmentSchema);
+const Appointment = mongoose.model("Appointment", appointmentSchema);
 export default Appointment;
